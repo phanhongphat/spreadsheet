@@ -24,8 +24,36 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
       const cellContent = data[`${column}${row}`];
       if (cellContent) {
         if (cellContent.charAt(0) === "=") {
+          const alphabetCharacter = ['A','B','C','D','E','F','G','H',
+                                      'I','J','K','L','M','N','O','P',
+                                      'Q','R','S','T','U','V','W','X','Y','Z']
+          let result = 0, tempArray
+          if(cellContent.toUpperCase().includes('SUM')) {
+            let tempStr = cellContent.slice(cellContent.indexOf('(') + 1, cellContent.indexOf(')'))
+            tempArray = tempStr.split(',')
+            tempArray.forEach((element) => {
+              element = element.trim()
+              if(element.includes(':')) {
+                const firstArg = alphabetCharacter.indexOf(element.trim().slice(0, 1))
+                const firstColNum = element.trim().slice(1, element.indexOf(':'))
+                const lastArg = alphabetCharacter.indexOf(element.split(':')[1].trim().slice(0, 1))
+                const lastColNum = element.split(':')[1].trim().slice(1, element.indexOf(':'))
+                for(let i = firstArg; i <= lastArg; i++) {
+                  for(let j = firstColNum; j <= lastColNum; j++) {
+                    result += parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()])
+                  }
+                }
+              } else {
+                result += !isNaN(element) 
+                          ? parseFloat(element) 
+                          : parseFloat((data[(element || "").toUpperCase()]))
+              }
+            })
+            return result
+          }
           // This regex converts = "A1+A2" to ["A1","+","A2"]
           const expression = cellContent.substr(1).split(/([+*-])/g);
+          console.log('expression', expression)
 
           let subStitutedExpression = "";
 
@@ -33,8 +61,10 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
             // Regex to test if it is of form alphabet followed by number ex: A1
             if (/^[A-z][0-9]$/g.test(item || "")) {
               subStitutedExpression += data[(item || "").toUpperCase()] || 0;
+              console.log(subStitutedExpression)
             } else {
               subStitutedExpression += item;
+              console.log(subStitutedExpression)
             }
           });
 
