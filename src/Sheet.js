@@ -34,19 +34,23 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
             tempArray.forEach((element) => {
               element = element.trim()
               if(element.includes(':')) {
-                const firstArg = alphabetCharacter.indexOf(element.trim().slice(0, 1))
+                const firstArg = alphabetCharacter.indexOf(element.trim().slice(0, 1).toUpperCase())
                 const firstColNum = element.trim().slice(1, element.indexOf(':'))
-                const lastArg = alphabetCharacter.indexOf(element.split(':')[1].trim().slice(0, 1))
+                const lastArg = alphabetCharacter.indexOf(element.split(':')[1].trim().slice(0, 1).toUpperCase())
                 const lastColNum = element.split(':')[1].trim().slice(1, element.indexOf(':'))
                 for(let i = firstArg; i <= lastArg; i++) {
                   for(let j = firstColNum; j <= lastColNum; j++) {
-                    result += parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()])
+                    result += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+                              && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+                              ? parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]) : 0
                   }
                 }
               } else {
-                result += !isNaN(element) 
-                          ? parseFloat(element) 
-                          : parseFloat((data[(element || "").toUpperCase()]))
+                result +=  !isNaN(element) 
+                          ? parseFloat(element)
+                          : (data[(element || "").toUpperCase()] != '' 
+                          && typeof data[(element || "").toUpperCase()] != 'undefined'
+                                  ? parseFloat(data[(element || "").toUpperCase()]) : 0)
               }
             })
             return result
