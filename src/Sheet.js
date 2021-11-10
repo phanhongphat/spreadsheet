@@ -9,6 +9,49 @@ const getColumnName = index =>
 const Sheet = ({ numberOfRows, numberOfColumns }) => {
   const [data, setData] = useState({});
 
+  const sumCountAndAverageOperation = (tempStr, alphabetCharacter, countOperation, averageOperation) => {
+    let tempArray = tempStr.split(',')
+    let sum = 0, count = 0
+    tempArray.forEach((element) => {
+      element = element.trim()
+      if(element.includes(':')) {
+        const firstArg = alphabetCharacter.indexOf(element.trim().slice(0, 1).toUpperCase())
+        const firstColNum = element.trim().slice(1, element.indexOf(':'))
+        const lastArg = alphabetCharacter.indexOf(element.split(':')[1].trim().slice(0, 1).toUpperCase())
+        const lastColNum = element.split(':')[1].trim().slice(1, element.indexOf(':'))
+        for(let i = firstArg; i <= lastArg; i++) {
+          for(let j = firstColNum; j <= lastColNum; j++) {
+            sum += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+                      && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+                      ? parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]) : 0
+                      
+            count += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+            && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+            ? 1 : 0
+          }
+        }
+      } else {
+        sum +=  !isNaN(element) 
+                  ? parseFloat(element)
+                  : (data[(element || "").toUpperCase()] != '' 
+                  && typeof data[(element || "").toUpperCase()] != 'undefined'
+                          ? parseFloat(data[(element || "").toUpperCase()]) : 0)
+        
+        count +=  !isNaN(element) 
+                  ? 1
+                  : (data[(element || "").toUpperCase()] != '' 
+                  && typeof data[(element || "").toUpperCase()] != 'undefined'
+                          ? 1 : 0)
+      }
+    })
+    if(countOperation && !averageOperation) {
+      return count
+    } else if(!countOperation && averageOperation) {
+      return count > 0 ? sum / count : 0
+    }
+    return sum
+  }
+
   const setCellValue = useCallback(
     ({ row, column, value }) => {
       const newData = { ...data };
@@ -32,52 +75,60 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
 
           // SUM operation
           if(cellContent.toUpperCase().includes('SUM')) {
-            tempArray = tempStr.split(',')
-            tempArray.forEach((element) => {
-              element = element.trim()
-              if(element.includes(':')) {
-                const firstArg = alphabetCharacter.indexOf(element.trim().slice(0, 1).toUpperCase())
-                const firstColNum = element.trim().slice(1, element.indexOf(':'))
-                const lastArg = alphabetCharacter.indexOf(element.split(':')[1].trim().slice(0, 1).toUpperCase())
-                const lastColNum = element.split(':')[1].trim().slice(1, element.indexOf(':'))
-                for(let i = firstArg; i <= lastArg; i++) {
-                  for(let j = firstColNum; j <= lastColNum; j++) {
-                    result += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
-                              && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
-                              ? parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]) : 0
-                  }
-                }
-              } else {
-                result +=  !isNaN(element) 
-                          ? parseFloat(element)
-                          : (data[(element || "").toUpperCase()] != '' 
-                          && typeof data[(element || "").toUpperCase()] != 'undefined'
-                                  ? parseFloat(data[(element || "").toUpperCase()]) : 0)
-              }
-            })
-            return result
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, false)
+            // tempArray = tempStr.split(',')
+            // tempArray.forEach((element) => {
+            //   element = element.trim()
+            //   if(element.includes(':')) {
+            //     const firstArg = alphabetCharacter.indexOf(element.trim().slice(0, 1).toUpperCase())
+            //     const firstColNum = element.trim().slice(1, element.indexOf(':'))
+            //     const lastArg = alphabetCharacter.indexOf(element.split(':')[1].trim().slice(0, 1).toUpperCase())
+            //     const lastColNum = element.split(':')[1].trim().slice(1, element.indexOf(':'))
+            //     for(let i = firstArg; i <= lastArg; i++) {
+            //       for(let j = firstColNum; j <= lastColNum; j++) {
+            //         result += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+            //                   && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+            //                   ? parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]) : 0
+            //       }
+            //     }
+            //   } else {
+            //     result +=  !isNaN(element) 
+            //               ? parseFloat(element)
+            //               : (data[(element || "").toUpperCase()] != '' 
+            //               && typeof data[(element || "").toUpperCase()] != 'undefined'
+            //                       ? parseFloat(data[(element || "").toUpperCase()]) : 0)
+            //   }
+            // })
+            // return result
           } 
+
           // COUNT operation
           else if(cellContent.toUpperCase().includes('COUNT')) {
-            tempArray = tempStr.split(':')
-            if(tempArray.length > 1) {
-              const firstArg = alphabetCharacter.indexOf(tempArray[0].trim().slice(0, 1).toUpperCase())
-              const firstColNum = tempArray[0].trim().slice(1)
-              const lastArg = alphabetCharacter.indexOf(tempArray[1].trim().slice(0, 1).toUpperCase())
-              const lastColNum = tempArray[1].trim().slice(1)
-              for(let i = firstArg; i <= lastArg; i++) {
-                for(let j = firstColNum; j <= lastColNum; j++) {
-                  result += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
-                            && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
-                            ? 1 : 0
-                }
-              }
-            } else {
-              return data[(tempArray[0] || "").toUpperCase()] != '' 
-                        && typeof data[(tempArray[0] || "").toUpperCase()] != 'undefined'
-                        ? 1 : 0
-            }
-            return result
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, true, false)
+            // tempArray = tempStr.split(':')
+            // if(tempArray.length > 1) {
+            //   const firstArg = alphabetCharacter.indexOf(tempArray[0].trim().slice(0, 1).toUpperCase())
+            //   const firstColNum = tempArray[0].trim().slice(1)
+            //   const lastArg = alphabetCharacter.indexOf(tempArray[1].trim().slice(0, 1).toUpperCase())
+            //   const lastColNum = tempArray[1].trim().slice(1)
+            //   for(let i = firstArg; i <= lastArg; i++) {
+            //     for(let j = firstColNum; j <= lastColNum; j++) {
+            //       result += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+            //                 && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+            //                 ? 1 : 0
+            //     }
+            //   }
+            // } else {
+            //   return data[(tempArray[0] || "").toUpperCase()] != '' 
+            //             && typeof data[(tempArray[0] || "").toUpperCase()] != 'undefined'
+            //             ? 1 : 0
+            // }
+            // return result
+          } 
+
+          // AVERAGE operation
+          else if(cellContent.toUpperCase().includes('AVERAGE')) {
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, true)
           }
           // This regex converts = "A1+A2" to ["A1","+","A2"]
           const expression = cellContent.substr(1).split(/([+*-])/g);
