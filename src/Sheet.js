@@ -28,8 +28,10 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
                                       'I','J','K','L','M','N','O','P',
                                       'Q','R','S','T','U','V','W','X','Y','Z']
           let result = 0, tempArray
+          let tempStr = cellContent.slice(cellContent.indexOf('(') + 1, cellContent.indexOf(')'))
+
+          // SUM operation
           if(cellContent.toUpperCase().includes('SUM')) {
-            let tempStr = cellContent.slice(cellContent.indexOf('(') + 1, cellContent.indexOf(')'))
             tempArray = tempStr.split(',')
             tempArray.forEach((element) => {
               element = element.trim()
@@ -53,6 +55,28 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
                                   ? parseFloat(data[(element || "").toUpperCase()]) : 0)
               }
             })
+            return result
+          } 
+          // COUNT operation
+          else if(cellContent.toUpperCase().includes('COUNT')) {
+            tempArray = tempStr.split(':')
+            if(tempArray.length > 1) {
+              const firstArg = alphabetCharacter.indexOf(tempArray[0].trim().slice(0, 1).toUpperCase())
+              const firstColNum = tempArray[0].trim().slice(1)
+              const lastArg = alphabetCharacter.indexOf(tempArray[1].trim().slice(0, 1).toUpperCase())
+              const lastColNum = tempArray[1].trim().slice(1)
+              for(let i = firstArg; i <= lastArg; i++) {
+                for(let j = firstColNum; j <= lastColNum; j++) {
+                  result += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+                            && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+                            ? 1 : 0
+                }
+              }
+            } else {
+              return data[(tempArray[0] || "").toUpperCase()] != '' 
+                        && typeof data[(tempArray[0] || "").toUpperCase()] != 'undefined'
+                        ? 1 : 0
+            }
             return result
           }
           // This regex converts = "A1+A2" to ["A1","+","A2"]
