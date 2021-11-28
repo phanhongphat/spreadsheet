@@ -21,27 +21,47 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
         const lastColNum = element.split(':')[1].trim().slice(1, element.indexOf(':'))
         for(let i = firstArg; i <= lastArg; i++) {
           for(let j = firstColNum; j <= lastColNum; j++) {
-            sum += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
-                      && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
-                      ? parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]) : 0
+            if(data[(alphabetCharacter[i] + j || "").toUpperCase()] !== ''
+                && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined') {
+                  const parseFloatData = parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()])
+                  sum += !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
+                  count += 1
+            }
+            // console.log(parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]))
+            // sum += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+            //           && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+            //           ? parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]) : 0
                       
-            count += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
-            && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
-            ? 1 : 0
+            // count += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
+            // && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
+            // ? 1 : 0
           }
         }
       } else {
-        sum +=  !isNaN(element) 
-                  ? parseFloat(element)
-                  : (data[(element || "").toUpperCase()] != '' 
-                  && typeof data[(element || "").toUpperCase()] != 'undefined'
-                          ? parseFloat(data[(element || "").toUpperCase()]) : 0)
+          if(!isNaN(element)) {
+            sum += parseFloat(element)
+          } else if(data[(element || "").toUpperCase()] != '' 
+                    && typeof data[(element || "").toUpperCase()] != 'undefined') {
+              const cellName = data[(element || "").toUpperCase()]
+              const parseFloatData = parseFloat(cellName)
+              console.log(element)
+              console.log(parseFloatData)
+              console.log(computeCell({ row: element.toUpperCase().slice(0,1), column: element.toUpperCase().slice(1)}))
+            sum += !isNaN(parseFloatData) ? parseFloatData : 
+                    computeCell({ row: element.toUpperCase().slice(1), column: element.toUpperCase().slice(0,1)})
+            count += 1
+          }
+        // sum +=   !isNaN(element)
+        //           ? parseFloat(element)
+        //           : (data[(element || "").toUpperCase()] != '' 
+        //           && typeof data[(element || "").toUpperCase()] != 'undefined'
+        //                   ? parseFloat(data[(element || "").toUpperCase()]) : 0)
         
-        count +=  !isNaN(element) 
-                  ? 1
-                  : (data[(element || "").toUpperCase()] != '' 
-                  && typeof data[(element || "").toUpperCase()] != 'undefined'
-                          ? 1 : 0)
+        // count +=  !isNaN(element) 
+        //           ? 1
+        //           : (data[(element || "").toUpperCase()] != '' 
+        //           && typeof data[(element || "").toUpperCase()] != 'undefined'
+        //                   ? 1 : 0)
       }
     })
     if(countOperation && !averageOperation) {
@@ -63,14 +83,13 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
   );
 
   const computeCell = useCallback(
-    ({ row, column }) => {
+    ({ row, column}) => {
       const cellContent = data[`${column}${row}`];
       if (cellContent) {
         if (cellContent.charAt(0) === "=") {
           const alphabetCharacter = ['A','B','C','D','E','F','G','H',
                                       'I','J','K','L','M','N','O','P',
                                       'Q','R','S','T','U','V','W','X','Y','Z']
-          let result = 0, tempArray
           let tempStr = cellContent.slice(cellContent.indexOf('(') + 1, cellContent.indexOf(')'))
 
           // SUM operation
@@ -83,6 +102,10 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
           } 
           // AVERAGE operation
           else if(cellContent.toUpperCase().includes('AVERAGE')) {
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, true)
+          }
+          // IF operation
+          else if(cellContent.toUpperCase().includes('IF')) {
             return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, true)
           }
           // This regex converts = "A1+A2" to ["A1","+","A2"]

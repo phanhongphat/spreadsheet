@@ -11,6 +11,7 @@ const Cell = ({
   currentValue
 }) => {
   const [edit, setEdit] = useState(false);
+  const [calculatedValue, setCalculatedValue] = useState(0);
 
   const value = useMemo(() => {
     if (edit) {
