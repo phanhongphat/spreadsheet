@@ -44,24 +44,10 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
                     && typeof data[(element || "").toUpperCase()] != 'undefined') {
               const cellName = data[(element || "").toUpperCase()]
               const parseFloatData = parseFloat(cellName)
-              console.log(element)
-              console.log(parseFloatData)
-              console.log(computeCell({ row: element.toUpperCase().slice(0,1), column: element.toUpperCase().slice(1)}))
             sum += !isNaN(parseFloatData) ? parseFloatData : 
                     computeCell({ row: element.toUpperCase().slice(1), column: element.toUpperCase().slice(0,1)})
             count += 1
           }
-        // sum +=   !isNaN(element)
-        //           ? parseFloat(element)
-        //           : (data[(element || "").toUpperCase()] != '' 
-        //           && typeof data[(element || "").toUpperCase()] != 'undefined'
-        //                   ? parseFloat(data[(element || "").toUpperCase()]) : 0)
-        
-        // count +=  !isNaN(element) 
-        //           ? 1
-        //           : (data[(element || "").toUpperCase()] != '' 
-        //           && typeof data[(element || "").toUpperCase()] != 'undefined'
-        //                   ? 1 : 0)
       }
     })
     if(countOperation && !averageOperation) {
