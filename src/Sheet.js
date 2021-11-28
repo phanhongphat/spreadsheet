@@ -27,14 +27,6 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
                   sum += !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
                   count += 1
             }
-            // console.log(parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]))
-            // sum += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
-            //           && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
-            //           ? parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()]) : 0
-                      
-            // count += data[(alphabetCharacter[i] + j || "").toUpperCase()] != '' 
-            // && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined'
-            // ? 1 : 0
           }
         }
       } else {
@@ -68,6 +60,19 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
     [data, setData]
   );
 
+  const getValue = (leftSide) => {
+    if(!isNaN(leftSide)) {
+      return parseFloat(leftSide)
+    } else if(data[(leftSide || "").toUpperCase()] != '' 
+              && typeof data[(leftSide || "").toUpperCase()] != 'undefined') {
+        const cellName = data[(leftSide || "").toUpperCase()]
+        const parseFloatData = parseFloat(cellName)
+        return !isNaN(parseFloatData) ? parseFloatData : 
+              computeCell({ row: leftSide.toUpperCase().slice(1), column: leftSide.toUpperCase().slice(0,1)})
+    }
+    return 0
+  }
+
   const computeCell = useCallback(
     ({ row, column}) => {
       const cellContent = data[`${column}${row}`];
@@ -92,7 +97,78 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
           }
           // IF operation
           else if(cellContent.toUpperCase().includes('IF')) {
-            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, true)
+            // return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, true)
+            const tempArray = tempStr.split(',')
+            const orConditions = tempArray[0].trim().split('||')
+            let fitOrConditions = true
+            for(let i = 0; i < orConditions.length; i++) {
+              const andConditions = orConditions[i].trim().split('&&')
+              let fitAndConditions = true
+              for(let j = 0; j < andConditions.length; j++) {
+                const trimedCondition = andConditions[j].trim()
+                if(trimedCondition.includes('>=')) {
+                  const leftSide = trimedCondition.slice(0, 2)
+                  const rightSide = trimedCondition.slice(4)
+                  let leftSideValue = getValue(leftSide)
+                  let rightSideValue = getValue(rightSide)
+                  if (leftSideValue >= rightSideValue) {
+                    continue
+                  }
+                  fitAndConditions = false
+                  break
+                } else if(trimedCondition.includes('>')) {
+                  const leftSide = trimedCondition.slice(0, 2)
+                  const rightSide = trimedCondition.slice(3)
+                  let leftSideValue = getValue(leftSide)
+                  let rightSideValue = getValue(rightSide)
+                  if (leftSideValue > rightSideValue) {
+                    continue
+                  }
+                  fitAndConditions = false
+                  break
+                } else if(trimedCondition.includes('<=')) {
+                  const leftSide = trimedCondition.slice(0, 2)
+                  const rightSide = trimedCondition.slice(4)
+                  let leftSideValue = getValue(leftSide)
+                  let rightSideValue = getValue(rightSide)
+                  if (leftSideValue <= rightSideValue) {
+                    continue
+                  }
+                  fitAndConditions = false
+                  break
+                } else if(trimedCondition.includes('<')) {
+                  const leftSide = trimedCondition.slice(0, 2)
+                  const rightSide = trimedCondition.slice(3)
+                  let leftSideValue = getValue(leftSide)
+                  let rightSideValue = getValue(rightSide)
+                  if (leftSideValue < rightSideValue) {
+                    continue
+                  }
+                  fitAndConditions = false
+                  break
+                } else if(trimedCondition.includes('==')) {
+                  const leftSide = trimedCondition.slice(0, 2)
+                  const rightSide = trimedCondition.slice(4)
+                  let leftSideValue = getValue(leftSide)
+                  let rightSideValue = getValue(rightSide)
+                  if (leftSideValue == rightSideValue) {
+                    continue
+                  }
+                  fitAndConditions = false
+                  break
+                }
+              }
+              if(!fitAndConditions) {
+                fitOrConditions = false
+                break
+              }
+              break
+            }
+            return fitOrConditions
+                    ? tempArray[1].trim().slice(1, tempArray[1].length - 1) 
+                    : tempArray[2].trim().slice(1, tempArray[2].length - 1)
+            // A1>A3 && A1<A5 || A1%4==0 
+
           }
           // This regex converts = "A1+A2" to ["A1","+","A2"]
           const expression = cellContent.substr(1).split(/([+*-])/g);
