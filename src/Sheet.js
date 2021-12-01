@@ -80,9 +80,9 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
   }
 
   const sumCountAndAverageOperation = 
-    (tempStr, alphabetCharacter, countOperation, averageOperation, condition) => {
+    (tempStr, alphabetCharacter, countOperation, averageOperation, condition, max, min) => {
     let tempArray = tempStr.split(',')
-    let sum = 0, count = 0
+    let sum = 0, count = 0, maxValue = 0, minValue = 0
     tempArray.forEach((element) => {
       element = element.trim()
       if(element.includes(':')) {
@@ -95,29 +95,43 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
             if(data[(alphabetCharacter[i] + j || "").toUpperCase()] !== ''
                 && typeof data[(alphabetCharacter[i] + j || "").toUpperCase()] != 'undefined') {
                   const parseFloatData = parseFloat(data[(alphabetCharacter[i] + j || "").toUpperCase()])
-                  if(condition !== null) {
+                  if(max && !min) {
+                    const tempNum = !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
+                    maxValue = tempNum >= maxValue ? tempNum : maxValue
+                  } else if(!max && min) {
+                    if(i == firstArg && j == firstColNum) {
+                      minValue = computeCell({ row: j, column: alphabetCharacter[i]})
+                    }
+                    const tempNum = !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
+                    minValue = tempNum <= minValue ? tempNum : minValue
+                  } else if(condition !== null) {
                     if(condition.includes('>=')) {
-                      const compareNum = parseFloat(condition.trim().slice(2))
+                      const parseFloatCompareNum = parseFloat(condition.trim().slice(2))
+                      const compareNum = !isNaN(parseFloatCompareNum) ? parseFloatCompareNum : getValue(condition.trim().slice(2))
                       const tempNum = !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
                       sum += tempNum >= compareNum ? tempNum : 0
                       count += tempNum >= compareNum ? 1 : 0
                     } else if(condition.includes('>')) {
-                      const compareNum = parseFloat(condition.trim().slice(1))
+                      const parseFloatCompareNum = parseFloat(condition.trim().slice(1))
+                      const compareNum = !isNaN(parseFloatCompareNum) ? parseFloatCompareNum : getValue(condition.trim().slice(1))
                       const tempNum = !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
                       sum += tempNum > compareNum ? tempNum : 0
                       count += tempNum > compareNum ? 1 : 0
                     } else if(condition.includes('<=')) {
-                      const compareNum = parseFloat(condition.trim().slice(2))
+                      const parseFloatCompareNum = parseFloat(condition.trim().slice(2))
+                      const compareNum = !isNaN(parseFloatCompareNum) ? parseFloatCompareNum : getValue(condition.trim().slice(2))
                       const tempNum = !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
                       sum += tempNum <= compareNum ? tempNum : 0
                       count += tempNum <= compareNum ? 1 : 0
                     } else if(condition.includes('<')) {
-                      const compareNum = parseFloat(condition.trim().slice(1))
+                      const parseFloatCompareNum = parseFloat(condition.trim().slice(1))
+                      const compareNum = !isNaN(parseFloatCompareNum) ? parseFloatCompareNum : getValue(condition.trim().slice(1))
                       const tempNum = !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
                       sum += tempNum < compareNum ? tempNum : 0
                       count += tempNum < compareNum ? 1 : 0
                     } else if(condition.includes('==')) {
-                      const compareNum = parseFloat(condition.trim().slice(2))
+                      const parseFloatCompareNum = parseFloat(condition.trim().slice(2))
+                      const compareNum = !isNaN(parseFloatCompareNum) ? parseFloatCompareNum : getValue(condition.trim().slice(2))
                       const tempNum = !isNaN(parseFloatData) ? parseFloatData : computeCell({ row: j, column: alphabetCharacter[i]})
                       sum += tempNum == compareNum ? tempNum : 0
                       count += tempNum == compareNum ? 1 : 0
@@ -146,6 +160,10 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
       return count
     } else if(!countOperation && averageOperation) {
       return count > 0 ? sum / count : 0
+    } else if(max && !min) {
+      return maxValue
+    } else if(!max && min) {
+      return minValue
     }
     return sum
   }
@@ -185,24 +203,24 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
           // SUMIF operation
           if(cellContent.toUpperCase().includes('SUMIF')) {
             const sumifArr = tempStr.split(',')
-            return sumCountAndAverageOperation(sumifArr[0], alphabetCharacter, false, false, sumifArr[1])
+            return sumCountAndAverageOperation(sumifArr[0], alphabetCharacter, false, false, sumifArr[1], false, false)
           } 
           // COUNTIF operation
           else if(cellContent.toUpperCase().includes('COUNTIF')) {
             const sumifArr = tempStr.split(',')
-            return sumCountAndAverageOperation(sumifArr[0], alphabetCharacter, true, false, sumifArr[1])
+            return sumCountAndAverageOperation(sumifArr[0], alphabetCharacter, true, false, sumifArr[1], false, false)
           } 
           // SUM operation
           else if(cellContent.toUpperCase().includes('SUM')) {
-            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, false, null)
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, false, null, false, false)
           }
           // COUNT operation
           else if(cellContent.toUpperCase().includes('COUNT')) {
-            return sumCountAndAverageOperation(tempStr, alphabetCharacter, true, false, null)
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, true, false, null, false, false)
           } 
           // AVERAGE operation
           else if(cellContent.toUpperCase().includes('AVERAGE')) {
-            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, true, null)
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, true, null, false, false)
           }
           // IF operation
           else if(cellContent.toUpperCase().includes('IF')) {
@@ -211,6 +229,14 @@ const Sheet = ({ numberOfRows, numberOfColumns }) => {
             return fitCondition
                     ? tempArray[1].trim().slice(1, tempArray[1].length - 1) 
                     : tempArray[2].trim().slice(1, tempArray[2].length - 1)
+          }
+          // MAX operation
+          else if(cellContent.toUpperCase().includes('MAX')) {
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, false, null, true, false)
+          }
+          // MIN operation
+          else if(cellContent.toUpperCase().includes('MIN')) {
+            return sumCountAndAverageOperation(tempStr, alphabetCharacter, false, false, null, false, true)
           }
           // This regex converts = "A1+A2" to ["A1","+","A2"]
           const expression = cellContent.substr(1).split(/([+*-])/g);
